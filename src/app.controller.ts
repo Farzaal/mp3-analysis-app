@@ -16,6 +16,7 @@ import { Mp3AnalysisService } from "./app/mp3-analysis.service";
 import { FileUploadDto } from "./app/dto/file-upload.dto";
 import { FileValidationPipe } from "./app/pipes/file-validation.pipe";
 import { FILE_UPLOAD_API_DOCS } from "./app/constants/api-docs.constants";
+import { Readable } from "stream";
 
 @ApiTags("App")
 @Controller()
@@ -34,8 +35,13 @@ export class AppController extends BaseController {
   }
 
   @Post("/file-upload")
-  @UseInterceptors(FileInterceptor("file"))
-  @UsePipes(FileValidationPipe)
+  @UseInterceptors(
+    FileInterceptor("file", {
+      // Optional: enforce large file limit consistent with your pipe (e.g., 3GB)
+      limits: { fileSize: 3 * 1024 * 1024 * 1024 },
+    }),
+  )
+  @UsePipes(new FileValidationPipe())
   @ApiOperation(FILE_UPLOAD_API_DOCS)
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -46,7 +52,16 @@ export class AppController extends BaseController {
     @UploadedFile() file: Express.Multer.File,
     @Res() res: Response,
   ): Promise<Response> {
-    const result = await this.mp3AnalysisService.analyzeMp3File(file.buffer);
-    return this.OKResponse(res, result);
+    // Prefer true streaming if Multer provides a stream (disk storage or memory)
+    // Fallback to creating a Readable from the in-memory buffer
+    const stream: Readable =
+      (file as any).stream instanceof Readable
+        ? (file as any).stream
+        : Readable.from(file.buffer);
+
+    const { frameCount } =
+      await this.mp3AnalysisService.analyzeMp3Readable(stream);
+
+    return this.OKResponse(res, { frameCount });
   }
 }

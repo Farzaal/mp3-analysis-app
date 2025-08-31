@@ -1,163 +1,139 @@
 import { Injectable } from "@nestjs/common";
+import { Readable } from "stream";
 
 @Injectable()
 export class Mp3AnalysisService {
-  /**
-   * Analyzes an MP3 file and returns the frame count
-   * @param buffer - The MP3 file buffer
-   * @returns Object containing frame count
-   */
-  async analyzeMp3File(buffer: Buffer): Promise<{ frameCount: number }> {
-    try {
-      const frameCount = this.countMp3Frames(buffer);
-      return { frameCount };
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to analyze MP3 file: ${errorMessage}`);
-    }
-  }
+  async analyzeMp3Readable(stream: Readable): Promise<{ frameCount: number }> {
+    return new Promise((resolve, reject) => {
+      const SLIDE = 4 * 1024; // keep tail to catch headers across chunk boundaries
+      let slidingBuffer = Buffer.alloc(0);
+      let bytesSeen = 0;
+      let id3Skipped = false;
+      let lastCountedAbs = -1;
+      let frameCount = 0;
 
-  /**
-   * Counts MP3 frames by parsing the file structure
-   * @param buffer - The MP3 file buffer
-   * @returns Number of frames found
-   */
-  private countMp3Frames(buffer: Buffer): number {
-    let frameCount = 0;
-    let offset = 0;
+      const processChunk = (chunk: Buffer) => {
+        slidingBuffer = Buffer.concat([slidingBuffer, chunk]);
 
-    // Skip ID3v2 tag if present
-    if (this.hasId3v2Tag(buffer)) {
-      offset = this.getId3v2Size(buffer);
-    }
-
-    // Parse MP3 frames with better boundary checking
-    while (offset < buffer.length - 4) {
-      const frameHeader = this.parseFrameHeader(buffer, offset);
-
-      if (frameHeader && frameHeader.isValid && frameHeader.frameSize > 0) {
-        // Ensure we don't go beyond buffer bounds
-        if (offset + frameHeader.frameSize > buffer.length) {
-          // This frame would extend beyond the buffer, so it's incomplete
-          break;
+        // Drop ID3v2 tag (supports v2.4 footer) once we have enough bytes
+        if (!id3Skipped && this.hasId3v2Tag(slidingBuffer)) {
+          const tagSize = this.getId3v2Size(slidingBuffer);
+          if (slidingBuffer.length >= tagSize) {
+            slidingBuffer = slidingBuffer.slice(tagSize);
+            id3Skipped = true;
+          } else {
+            return; // wait for more data
+          }
         }
 
-        frameCount++;
-        offset += frameHeader.frameSize;
-      } else {
-        // Try to find next valid frame header
-        offset++;
-      }
-    }
+        let local = 0;
+        while (local <= slidingBuffer.length - 4) {
+          const hdr = this.parseFrameHeader(slidingBuffer, local);
+          if (hdr && hdr.isValid && hdr.frameSize > 0) {
+            const nextLocal = local + hdr.frameSize;
 
-    return frameCount;
+            // two-header confirmation if possible
+            const haveNext = nextLocal + 4 <= slidingBuffer.length;
+            const nextHdr = haveNext
+              ? this.parseFrameHeader(slidingBuffer, nextLocal)
+              : null;
+
+            const absStart =
+              bytesSeen - slidingBuffer.length + local + chunk.length;
+            if (nextHdr) {
+              if (absStart > lastCountedAbs) {
+                frameCount++;
+                lastCountedAbs = absStart;
+              }
+              local = nextLocal;
+              continue;
+            }
+
+            if (nextLocal > slidingBuffer.length - 4) break; // need more data to confirm
+            local += 1; // likely false sync
+          } else {
+            local += 1;
+          }
+        }
+
+        if (slidingBuffer.length > SLIDE) {
+          slidingBuffer = slidingBuffer.slice(-SLIDE);
+        }
+      };
+
+      stream.on("data", (chunk: Buffer) => {
+        processChunk(chunk);
+        bytesSeen += chunk.length;
+      });
+
+      stream.on("end", () => resolve({ frameCount }));
+      stream.on("error", (e) => reject(e));
+    });
   }
 
-  /**
-   * Checks if the file has an ID3v2 tag
-   */
-  private hasId3v2Tag(buffer: Buffer): boolean {
-    return (
-      buffer.length >= 3 &&
-      buffer[0] === 0x49 && // 'I'
-      buffer[1] === 0x44 && // 'D'
-      buffer[2] === 0x33 // '3'
-    );
-  }
-
-  /**
-   * Gets the size of ID3v2 tag
-   */
-  private getId3v2Size(buffer: Buffer): number {
-    if (buffer.length < 10) return 0;
-
-    // ID3v2 size is stored in 4 bytes (big-endian) starting at offset 6
-    const size =
-      (buffer[6] << 21) | (buffer[7] << 14) | (buffer[8] << 7) | buffer[9];
-
-    return 10 + size; // 10 bytes header + data size
-  }
-
-  /**
-   * Parses MP3 frame header
-   */
   private parseFrameHeader(
     buffer: Buffer,
     offset: number,
   ): { isValid: boolean; frameSize: number } | null {
     if (offset + 4 > buffer.length) return null;
 
-    // Check for MPEG sync word (11 bits set to 1)
-    const firstByte = buffer[offset];
-    const secondByte = buffer[offset + 1];
+    const b1 = buffer[offset];
+    const b2 = buffer[offset + 1];
+    if ((b1 & 0xff) !== 0xff || (b2 & 0xe0) !== 0xe0) return null;
 
-    if ((firstByte & 0xff) !== 0xff || (secondByte & 0xe0) !== 0xe0) {
+    const version = (b2 >> 3) & 0x03;
+    const layer = (b2 >> 1) & 0x03;
+    if (version !== 0x03 || layer !== 0x01) return null; // MPEG-1 Layer III only
+
+    const b3 = buffer[offset + 2];
+    const bitrateIndex = (b3 >> 4) & 0x0f;
+    const sampleRateIndex = (b3 >> 2) & 0x03;
+    const padding = (b3 >> 1) & 0x01;
+
+    if (bitrateIndex === 0 || bitrateIndex === 15 || sampleRateIndex === 3)
       return null;
-    }
 
-    // Parse MPEG version and layer
-    const version = (secondByte >> 3) & 0x03;
-    const layer = (secondByte >> 1) & 0x03;
-
-    // We only support MPEG Version 1, Layer 3
-    if (version !== 0x03 || layer !== 0x01) {
-      return null;
-    }
-
-    // Parse bitrate and sample rate
-    const bitrateIndex = (buffer[offset + 2] >> 4) & 0x0f;
-    const sampleRateIndex = (buffer[offset + 2] >> 2) & 0x03;
-    const padding = (buffer[offset + 2] >> 1) & 0x01;
-
-    // Calculate frame size
     const frameSize = this.calculateFrameSize(
       bitrateIndex,
       sampleRateIndex,
       padding,
     );
+    if (frameSize < 20 || frameSize > 10000) return null;
 
-    // Additional validation: ensure frame size is reasonable
-    if (frameSize <= 0 || frameSize > 10000) {
-      return null; // Invalid frame size
-    }
-
-    // Check if we have enough data for the complete frame
-    if (offset + frameSize > buffer.length) {
-      return null; // Incomplete frame
-    }
-
-    return {
-      isValid: true,
-      frameSize: frameSize,
-    };
+    return { isValid: true, frameSize };
   }
 
-  /**
-   * Calculates MP3 frame size based on bitrate, sample rate, and padding
-   */
   private calculateFrameSize(
     bitrateIndex: number,
     sampleRateIndex: number,
     padding: number,
   ): number {
-    // MPEG Version 1, Layer 3 bitrates (kbps)
     const bitrates = [
       0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 288, 320,
     ];
-    // MPEG Version 1 sample rates (Hz)
     const sampleRates = [44100, 48000, 32000];
 
-    if (bitrateIndex === 0 || bitrateIndex === 15 || sampleRateIndex === 3) {
-      return 0; // Invalid
-    }
-
-    const bitrate = bitrates[bitrateIndex];
+    const bitrate = bitrates[bitrateIndex] * 1000;
     const sampleRate = sampleRates[sampleRateIndex];
 
-    // Frame size calculation: (144 * bitrate) / sampleRate + padding
-    const frameSize = Math.floor((144 * bitrate * 1000) / sampleRate) + padding;
+    return Math.floor((144 * bitrate) / sampleRate) + padding;
+  }
 
-    return frameSize;
+  private hasId3v2Tag(buffer: Buffer): boolean {
+    return (
+      buffer.length >= 3 &&
+      buffer[0] === 0x49 &&
+      buffer[1] === 0x44 &&
+      buffer[2] === 0x33
+    );
+  }
+
+  private getId3v2Size(buffer: Buffer): number {
+    if (buffer.length < 10) return 0;
+    const flags = buffer[5];
+    const size =
+      (buffer[6] << 21) | (buffer[7] << 14) | (buffer[8] << 7) | buffer[9];
+    const hasFooter = (flags & 0x10) !== 0; // ID3v2.4 footer flag
+    return 10 + size + (hasFooter ? 10 : 0);
   }
 }
