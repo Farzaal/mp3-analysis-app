@@ -1,0 +1,17 @@
+export enum NotificationTemplate {
+  FORGOT_PASSWORD = 'forgotPassword.html',
+  FRANCHISE_ADMIN_CREATED = 'franchiseAdminCreated.html',
+  SERVICE_TYPE_CATEGORY_CREATED = 'serviceTypeCategoryCreated.html',
+  SERVICE_TYPE_CATEGORY_DELETED = 'serviceTypeCategoryDeleted.html',
+  SERVICE_TYPE_CREATED = 'serviceTypeCreated.html',
+  STANDARD_ADMIN_CREATED = 'standardAdminCreated.html',
+  STANDARD_ADMIN_UPDATED = 'standardAdminUpdated.html',
+  VENDOR_CREATED = 'vendorCreated.html',
+  VENDOR_STATUS_CHANGED = 'vendorStatus.html',
+  ESTIMATE_CREATED = 'estimateCreated.html',
+  ESTIMATE_REJECTION_BY_OWNER_FOR_VENDOR = 'estimateRejectionByOwnerForVendor.html',
+  ESTIMATE_REJECTION_BY_OWNER_FOR_FRANCHISE_ADMIN = 'estimateRejectionByOwnerForFa.html',
+  ESTIMATE_VENDOR_ASSIGNMENT = 'estimateVendorAssignment.html',
+  ESTIMATE_VENDOR_QUOTATION_UPDATE_BY_FRANCHISE_ADMIN = 'estimateVendorQuotationUpdateByFa.html',
+  ESTIMATE_VENDOR_QUOTATION_ADDED = 'estimateVendorQuotationAdded.html',
+}

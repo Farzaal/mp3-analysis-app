@@ -1,0 +1,10 @@
+{
+  "sonarlint.rules": {
+    "typescript:S3776": {
+      "level": "off",
+      "scope": {
+        "include": ["**/*repository.ts"]
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+export enum DownloadReportEventName {
+  VENDOR_INVOICE_REPORT = 'download.vendorInvoiceReport',
+  OWNER_INVOICE_REPORT = 'download.ownerInvoiceReport',
+  OWNER_SERVICE_REQUEST_REPORT = 'download.ownerServiceRequestReport',
+  VENDOR_REPORT = 'download.vendorReport',
+  OWNER_REPORT = 'download.ownerReport',
+  FRANCHISE_SERVICE_REQUEST_REPORT = 'download.franchiseServiceRequestReport',
+  ADMIN_PROPERTY_REPORT = 'download.adminPropertyReport',
+  ADMIN_INVOICE_REPORT = 'download.adminInvoiceReport',
+  SERVICE_REQUEST_LISTING = 'download.serviceRequestListing',
+  PROPERTY_LISTING = 'download.propertyListing',
+  OWNER_LISTING = 'download.ownerListing',
+  INVOICES = 'download.invoices',
+  VENDORS = 'download.vendors',
+}

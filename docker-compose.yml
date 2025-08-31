@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  app:
+    image: we-oversee
+    build: .
+    container_name: we-oversee-apis
+    ports:
+      - "3000:3000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=we_oversee
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    container_name: db_container
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: we_oversee
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
