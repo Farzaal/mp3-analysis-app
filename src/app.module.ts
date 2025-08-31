@@ -3,6 +3,8 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import { BunyanLogger } from "./app/commons/logger.service";
+import { Mp3AnalysisService } from "./app/mp3-analysis.service";
+import { FileValidationPipe } from "./app/pipes/file-validation.pipe";
 
 @Module({
   imports: [
@@ -12,6 +14,6 @@ import { BunyanLogger } from "./app/commons/logger.service";
     }),
   ],
   controllers: [AppController],
-  providers: [AppService, BunyanLogger],
+  providers: [AppService, BunyanLogger, Mp3AnalysisService, FileValidationPipe],
 })
 export class AppModule {}

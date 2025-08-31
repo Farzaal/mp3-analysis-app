@@ -1,369 +1,210 @@
-# We Oversee Backend API
+# MP3 File Analysis App
 
-A comprehensive property management and service request system built with NestJS, TypeORM, and PostgreSQL.
+A NestJS-based REST API application that analyzes MP3 files and counts the number of MP3 frames. Built with TypeScript and custom MP3 parsing algorithms.
 
-## 🏗️ Project Architecture
+## 🎯 Features
 
-This project follows a **layered architecture pattern** with clear separation of concerns:
+- **MP3 File Upload**: Accepts MP3 files via HTTP POST requests
+- **Custom Frame Parser**: Built-in MP3 frame counting without external NPM packages
+- **MPEG Version 1 Audio Layer 3 Support**: Specifically designed for MP3 format
+- **File Validation**: Ensures only MP3 files are processed
+- **Swagger Documentation**: Interactive API documentation
+- **Error Handling**: Comprehensive error handling and validation
 
-### Architecture Layers
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                       │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │   Controllers   │  │   DTOs         │  │  Guards     │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-┌─────────────────────────────────────────────────────────────┐
-│                     Business Logic Layer                    │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │    Services     │  │   Utilities     │  │  Helpers    │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-┌─────────────────────────────────────────────────────────────┐
-│                      Data Access Layer                      │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │  Repositories   │  │    Models       │  │  Database   │ │
-│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Core Components
-
-#### 1. **Controllers** (`src/app/controllers/`)
-- Handle HTTP requests and responses
-- Extend `BaseController` for standardized response handling
-- Implement input validation using DTOs
-- Apply authentication and authorization guards
-
-#### 2. **Services** (`src/app/services/`)
-- Contain business logic and orchestration
-- Handle data transformation and validation
-- Coordinate between repositories and external services
-- Implement caching and business rules
-
-#### 3. **Repositories** (`src/app/repositories/`)
-- Extend `BaseRepository<T>` for common CRUD operations
-- Handle database queries and data persistence
-- Implement pagination, filtering, and sorting
-- Manage database transactions
-
-#### 4. **Models** (`src/app/models/`)
-- Define database schema using TypeORM decorators
-- Extend `PostgresBaseModel` for common fields
-- Implement relationships (One-to-Many, Many-to-One, etc.)
-- Handle data validation and transformation
-
-## 🗄️ Database & ORM
-
-### TypeORM Configuration
-- **Database**: PostgreSQL 15
-- **ORM**: TypeORM with NestJS integration
-- **Connection**: Async configuration with environment variables
-- **Synchronization**: Disabled (manual migrations)
-
-### Base Model Structure
-```typescript
-// BaseModel (src/app/models/base.model.ts)
-export abstract class BaseModel extends BaseEntity {
-  @Column({ name: 'created_at', type: 'bigint' })
-  created_at: number;
-
-  @Column({ name: 'updated_at', type: 'bigint' })
-  updated_at: number;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  is_deleted: boolean;
-}
-
-// PostgresBaseModel (src/app/models/postgresBase.model.ts)
-export abstract class PostgresBaseModel extends BaseModel {
-  @PrimaryGeneratedColumn({ name: 'id', type: 'bigint' })
-  id: number;
-}
-```
-
-### Key Database Models
-
-#### User Management
-- **UserModel**: Core user entity with role-based access control
-- **RoleModel**: User roles and permissions
-- **PermissionModel**: Granular permissions system
-
-#### Property Management
-- **PropertyMasterModel**: Main property information
-- **PropertyDetailModel**: Detailed property specifications
-- **GuestModel**: Guest information and access
-
-#### Service Management
-- **ServiceRequestMasterModel**: Service request lifecycle
-- **ServiceTypeModel**: Available service types and pricing
-- **VendorServiceTypeModel**: Vendor-service type relationships
-
-#### Financial Management
-- **EstimateMasterModel**: Service estimates and quotes
-- **ServiceRequestInvoiceModel**: Billing and payment tracking
-- **PaymentMethodModel**: Payment method configurations
-
-## 🔐 Authentication & Authorization
-
-### JWT Strategy
-- **JWT Secret**: Configurable via environment variables
-- **Token Expiry**: 60 minutes
-- **Extraction**: Bearer token from Authorization header
-
-### Role-Based Access Control
-```typescript
-export enum UserType {
-  FranchiseAdmin = 1,
-  Owner = 2,
-  Vendor = 3,
-  Guest = 4,
-  SuperAdmin = 5,
-}
-```
-
-### Guards
-- **AuthGuard**: JWT token validation and role checking
-- **Factory Pattern**: Dynamic guard creation with role requirements
-
-## 📝 Data Validation & Transformation
-
-### DTOs (Data Transfer Objects)
-- Input validation using `class-validator`
-- Response transformation using `class-transformer`
-- Pagination parameters with validation
-
-### Custom Decorators
-- **@IsValidDate**: Date format validation
-- **Pagination decorators**: Page and limit validation
-
-### Validation Pipes
-- Global validation pipe for automatic validation
-- Custom exception filter for validation errors
-
-## 🚀 API Documentation
-
-### Swagger Integration
-- **Endpoint**: `/api-docs`
-- **Title**: We Oversee APIs
-- **Version**: 1.0
-- **Server**: Local environment configuration
-
-### Response Standards
-```typescript
-interface IResponseJson {
-  message: string;
-  data: any;
-  code: number;
-}
-```
-
-### HTTP Status Codes
-- **200**: OK
-- **201**: Created
-- **400**: Bad Request
-- **401**: Unauthorized
-- **403**: Forbidden
-- **404**: Not Found
-- **409**: Conflict
-- **422**: Unprocessable Entity
-- **500**: Server Error
-
-## 🛠️ Development Tools & Hooks
-
-### Code Quality
-- **ESLint**: Code linting and formatting
-- **Prettier**: Code formatting
-- **Husky**: Git hooks for pre-commit validation
-- **Lint-staged**: Staged file linting
-
-### Testing
-- **Jest**: Unit and integration testing
-- **Test Coverage**: Coverage reporting enabled
-- **E2E Testing**: End-to-end test configuration
-
-### Database Tools
-- **TypeORM UML**: Database schema visualization
-- **Seeders**: Database seeding scripts
-- **Migrations**: Database version control
-
-## 🐳 Deployment & Infrastructure
-
-### Docker Configuration
-```yaml
-# docker-compose.yml
-services:
-  app:
-    build: .
-    ports: ["3000:3000"]
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: we_oversee
-```
-
-### PM2 Process Management
-- **Cluster Mode**: Single instance with auto-restart
-- **Memory Limit**: 2GB restart threshold
-- **Logging**: Structured logging with rotation
-
-### Environment Variables
-```bash
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=password
-DB_DATABASE=we_oversee
-
-# JWT
-JWT_SECRET_KEY=your_secret_key
-
-# Pagination
-PAGE_LIMIT=10
-
-# Logging
-LOG_LEVEL=info
-NODE_ENV=development
-```
-
-## 📦 Installation & Setup
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 21.1.0+
-- PostgreSQL 15+
-- Yarn package manager
 
-### Local Development Setup
+- Node.js (v18 or higher)
+- npm or yarn
+- Git
+
+### Installation
 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd we-oversee-backend
+   cd assessment
    ```
 
 2. **Install dependencies**
    ```bash
+   npm install
+   # or
    yarn install
    ```
 
-3. **Environment configuration**
+3. **Start the development server**
    ```bash
-   cp .env.example .env
-   # Configure your environment variables
-   ```
-
-4. **Database setup**
-   ```bash
-   # Start PostgreSQL
-   # Create database: we_oversee
-   # Update .env with database credentials
-   ```
-
-5. **Run the application**
-   ```bash
-   # Development mode
+   npm run start:dev
+   # or
    yarn start:dev
-   
-   # Production build
-   yarn build
-   yarn start:prod
    ```
 
-### Docker Setup
+4. **Access the application**
+   - **API Base URL**: `http://localhost:3002/api`
+   - **Swagger Documentation**: `http://localhost:3002/api-docs`
+   - **Health Check**: `http://localhost:3002/api/ping`
 
-1. **Build and run with Docker Compose**
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Access the application**
-   - API: http://localhost:3000/api
-   - Documentation: http://localhost:3000/api-docs
-
-## 🔧 Available Scripts
-
-```json
-{
-  "start": "nest start",
-  "start:dev": "nest start --watch",
-  "start:debug": "nest start --debug --watch",
-  "start:prod": "node dist/main",
-  "build": "nest build",
-  "test": "jest",
-  "test:watch": "jest --watch",
-  "test:cov": "jest --coverage",
-  "test:e2e": "jest --config ./test/jest-e2e.json",
-  "seed": "ts-node src/app/seeders/seed-run.ts",
-  "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
-  "format": "prettier --write \"src/**/*.ts\"",
-  "typecheck": "tsc --noEmit",
-  "db:diagram": "typeorm-uml ormconfig.json"
-}
-```
-
-## 🏗️ Project Structure
+## 📁 Project Structure
 
 ```
 src/
 ├── app/
-│   ├── commons/           # Shared utilities and base classes
-│   │   ├── base.controller.ts
-│   │   ├── base.request.ts
-│   │   ├── jwt.config.ts
-│   │   ├── jwt.strategy.ts
-│   │   ├── logger.service.ts
-│   │   └── pinoLogger.config.ts
-│   ├── config/            # Configuration files
-│   │   └── typeorm.config.ts
-│   ├── contracts/         # Interfaces, types, and enums
-│   │   ├── enums/         # Business logic enums
-│   │   ├── interfaces/    # Data contracts
-│   │   └── types/         # Type definitions
-│   ├── decorators/        # Custom decorators
-│   ├── dto/               # Data Transfer Objects
-│   ├── filters/           # Exception filters
-│   ├── guards/            # Authentication guards
-│   ├── models/            # Database entities
-│   ├── pipes/             # Validation pipes
-│   ├── repositories/      # Data access layer
-│   ├── response/          # Response models
-│   ├── seeders/           # Database seeders
-│   ├── services/          # Business logic
-│   └── utils/             # Utility functions
-├── properties/            # Property module
-├── users/                 # User module
+│   ├── commons/           # Common services and utilities
+│   ├── constants/         # API documentation constants
+│   ├── dto/              # Data Transfer Objects
+│   ├── pipes/            # Custom validation pipes
+│   └── mp3-analysis.service.ts  # MP3 parsing logic
+├── app.controller.ts      # Main API controller
+├── app.module.ts          # Application module
+├── app.service.ts         # Basic app service
 └── main.ts               # Application entry point
 ```
 
-## 🔍 Key Features
+## 🔌 API Endpoints
 
-- **Multi-tenant Architecture**: Support for different user types and roles
-- **Property Management**: Comprehensive property tracking and management
-- **Service Request System**: End-to-end service request lifecycle
-- **Estimate & Billing**: Integrated estimation and invoicing system
-- **Guest Management**: Guest access and communication tracking
-- **Payment Integration**: Flexible payment method support
-- **Notification System**: Multi-channel notification delivery
-- **Document Management**: File upload and management capabilities
+### 1. Health Check
+- **GET** `/api/ping`
+- **Description**: Basic health check endpoint
+- **Response**: `{ "success": true }`
+
+### 2. MP3 File Analysis
+- **POST** `/api/file-upload`
+- **Description**: Upload and analyze MP3 file to count frames
+- **Content-Type**: `multipart/form-data`
+- **Request Body**: 
+  ```
+  file: [MP3 file]
+  ```
+- **Response**: 
+  ```json
+  {
+    "frameCount": 1500
+  }
+  ```
+
+## 🎵 MP3 Frame Counting Algorithm
+
+The application implements a custom MP3 frame parser that:
+
+1. **Skips ID3v2 Tags**: Identifies and skips metadata tags
+2. **Finds MPEG Sync Words**: Locates frame boundaries using 11-bit sync patterns
+3. **Validates Frame Headers**: Ensures MPEG Version 1, Layer 3 compliance
+4. **Calculates Frame Sizes**: Uses bitrate and sample rate information
+5. **Counts Valid Frames**: Iterates through the file counting valid MP3 frames
+
+### Technical Details
+
+- **MPEG Version**: 1 (MPEG-1)
+- **Layer**: 3 (MP3)
+- **Supported Bitrates**: 32-320 kbps
+- **Sample Rates**: 32kHz, 44.1kHz, 48kHz
+- **Frame Size Calculation**: `(144 * bitrate * 1000) / sampleRate + padding`
+
+## 🧪 Testing
+
+### Manual Testing
+
+1. **Using Swagger UI**
+   - Navigate to `http://localhost:3002/api-docs`
+   - Find the `/file-upload` endpoint
+   - Click "Try it out"
+   - Upload an MP3 file
+   - Execute the request
+
+2. **Using cURL**
+   ```bash
+   curl -X POST http://localhost:3002/api/file-upload \
+     -F "file=@path/to/your/file.mp3" \
+     -H "Accept: application/json"
+   ```
+
+3. **Using Postman**
+   - Set method to `POST`
+   - URL: `http://localhost:3002/api/file-upload`
+   - Body: `form-data`
+   - Key: `file` (Type: File)
+   - Value: Select your MP3 file
+
+### Validation
+
+To verify the frame count accuracy, use the `mediainfo` tool:
+```bash
+mediainfo your-file.mp3
+```
+
+## 🛠️ Development
+
+### Available Scripts
+
+- **`npm run build`**: Build the application
+- **`npm run start:dev`**: Start development server with hot reload
+- **`npm run start:debug`**: Start with debug mode
+- **`npm run start:prod`**: Start production server
+- **`npm run lint`**: Run ESLint
+- **`npm run test`**: Run unit tests
+
+### Adding New Features
+
+1. **Create DTOs** in `src/app/dto/`
+2. **Add Services** in `src/app/` or create new modules
+3. **Update Controller** in `src/app.controller.ts`
+4. **Add Validation** using pipes in `src/app/pipes/`
+5. **Document API** using Swagger decorators
+
+## 🔒 Security & Validation
+
+- **File Type Validation**: Only MP3 files accepted
+- **File Size Limit**: 50MB maximum file size
+- **Input Sanitization**: Proper error handling and validation
+- **CORS Enabled**: Configured for development and production
+
+## 📚 Dependencies
+
+### Core Dependencies
+- `@nestjs/common`: NestJS core framework
+- `@nestjs/platform-express`: Express platform integration
+- `@nestjs/swagger`: API documentation
+- `@nestjs/config`: Configuration management
+- `multer`: File upload handling
+
+### Development Dependencies
+- `@nestjs/cli`: NestJS command line tools
+- `typescript`: TypeScript compiler
+- `eslint`: Code linting
+- `prettier`: Code formatting
+
+## 🚨 Error Handling
+
+The application handles various error scenarios:
+
+- **No File Uploaded**: Returns 400 with "No file uploaded" message
+- **Invalid File Type**: Returns 400 with "Only MP3 files are allowed" message
+- **File Too Large**: Returns 400 with size limit exceeded message
+- **MP3 Parsing Errors**: Returns 400 with parsing failure details
+- **Server Errors**: Returns 500 with appropriate error messages
 
 ## 🤝 Contributing
 
-1. Follow the established code structure and patterns
-2. Ensure all tests pass before submitting
-3. Use conventional commit messages
-4. Update documentation for new features
-5. Follow the established coding standards
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ## 📄 License
 
-This project is proprietary and confidential.
+This project is part of a technical assessment and is not licensed for commercial use.
+
+## 🆘 Support
+
+For technical issues or questions:
+1. Check the Swagger documentation at `/api-docs`
+2. Review the error logs in the console
+3. Verify file format and size requirements
+4. Ensure the server is running on the correct port
 
 ---
 
-**Built with ❤️ using NestJS, TypeORM, and PostgreSQL**
+**Built with ❤️ using NestJS and TypeScript**
