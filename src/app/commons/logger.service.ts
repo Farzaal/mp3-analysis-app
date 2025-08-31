@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import * as bunyan from 'bunyan';
+import { Injectable } from "@nestjs/common";
+import * as bunyan from "bunyan";
 
 @Injectable()
 export class BunyanLogger {
   private readonly logger: bunyan;
   constructor() {
-    this.logger = bunyan.createLogger({ name: 'We-Oversee-Logger' });
+    this.logger = bunyan.createLogger({ name: "Mp3-Analysis-Logger" });
   }
 
   log(message: any, ...params: any[]) {

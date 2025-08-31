@@ -1,210 +1,241 @@
 # MP3 File Analysis App
 
-A NestJS-based REST API application that analyzes MP3 files and counts the number of MP3 frames. Built with TypeScript and custom MP3 parsing algorithms.
+A high-performance NestJS application that analyzes MP3 files and counts MPEG frames using streaming technology for memory-efficient processing of large files.
 
-## 🎯 Features
+## 🚀 Getting Started
 
-- **MP3 File Upload**: Accepts MP3 files via HTTP POST requests
-- **Custom Frame Parser**: Built-in MP3 frame counting without external NPM packages
-- **MPEG Version 1 Audio Layer 3 Support**: Specifically designed for MP3 format
-- **File Validation**: Ensures only MP3 files are processed
-- **Swagger Documentation**: Interactive API documentation
-- **Error Handling**: Comprehensive error handling and validation
+### Quick Run (5 steps)
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- npm or yarn
-- Git
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd assessment
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm run start:dev
-   # or
-   yarn start:dev
-   ```
-
-4. **Access the application**
-   - **API Base URL**: `http://localhost:3002/api`
-   - **Swagger Documentation**: `http://localhost:3002/api-docs`
-   - **Health Check**: `http://localhost:3002/api/ping`
-
-## 📁 Project Structure
-
-```
-src/
-├── app/
-│   ├── commons/           # Common services and utilities
-│   ├── constants/         # API documentation constants
-│   ├── dto/              # Data Transfer Objects
-│   ├── pipes/            # Custom validation pipes
-│   └── mp3-analysis.service.ts  # MP3 parsing logic
-├── app.controller.ts      # Main API controller
-├── app.module.ts          # Application module
-├── app.service.ts         # Basic app service
-└── main.ts               # Application entry point
-```
-
-## 🔌 API Endpoints
-
-### 1. Health Check
-- **GET** `/api/ping`
-- **Description**: Basic health check endpoint
-- **Response**: `{ "success": true }`
-
-### 2. MP3 File Analysis
-- **POST** `/api/file-upload`
-- **Description**: Upload and analyze MP3 file to count frames
-- **Content-Type**: `multipart/form-data`
-- **Request Body**: 
-  ```
-  file: [MP3 file]
-  ```
-- **Response**: 
-  ```json
-  {
-    "frameCount": 1500
-  }
-  ```
-
-## 🎵 MP3 Frame Counting Algorithm
-
-The application implements a custom MP3 frame parser that:
-
-1. **Skips ID3v2 Tags**: Identifies and skips metadata tags
-2. **Finds MPEG Sync Words**: Locates frame boundaries using 11-bit sync patterns
-3. **Validates Frame Headers**: Ensures MPEG Version 1, Layer 3 compliance
-4. **Calculates Frame Sizes**: Uses bitrate and sample rate information
-5. **Counts Valid Frames**: Iterates through the file counting valid MP3 frames
-
-### Technical Details
-
-- **MPEG Version**: 1 (MPEG-1)
-- **Layer**: 3 (MP3)
-- **Supported Bitrates**: 32-320 kbps
-- **Sample Rates**: 32kHz, 44.1kHz, 48kHz
-- **Frame Size Calculation**: `(144 * bitrate * 1000) / sampleRate + padding`
-
-## 🧪 Testing
-
-### Manual Testing
-
-1. **Using Swagger UI**
-   - Navigate to `http://localhost:3002/api-docs`
-   - Find the `/file-upload` endpoint
-   - Click "Try it out"
-   - Upload an MP3 file
-   - Execute the request
-
-2. **Using cURL**
-   ```bash
-   curl -X POST http://localhost:3002/api/file-upload \
-     -F "file=@path/to/your/file.mp3" \
-     -H "Accept: application/json"
-   ```
-
-3. **Using Postman**
-   - Set method to `POST`
-   - URL: `http://localhost:3002/api/file-upload`
-   - Body: `form-data`
-   - Key: `file` (Type: File)
-   - Value: Select your MP3 file
-
-### Validation
-
-To verify the frame count accuracy, use the `mediainfo` tool:
 ```bash
-mediainfo your-file.mp3
+# 1. Clone the repository
+git clone <repository-url>
+cd assessment
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment
+cp env.example .env
+# Edit .env with your configuration (see Environment Variables below)
+
+# 4. Start the application
+npm run start:dev
+
+# 5. Open in browser
+# Swagger UI: http://localhost:3000/api-docs
+# Health Check: http://localhost:3000/ping
 ```
 
-## 🛠️ Development
+### Environment Setup
 
-### Available Scripts
+```bash
+# Copy environment template
+cp env.example .env
 
-- **`npm run build`**: Build the application
-- **`npm run start:dev`**: Start development server with hot reload
-- **`npm run start:debug`**: Start with debug mode
-- **`npm run start:prod`**: Start production server
-- **`npm run lint`**: Run ESLint
-- **`npm run test`**: Run unit tests
+# Edit .env file with your settings
+# Key variables to configure:
+# - MAX_FILE_SIZE: Maximum file upload size (default: 5GB)
+# - PORT: Application port (default: 3000)
+# - NODE_ENV: Environment (development/production)
+```
 
-### Adding New Features
+### Environment Variables
 
-1. **Create DTOs** in `src/app/dto/`
-2. **Add Services** in `src/app/` or create new modules
-3. **Update Controller** in `src/app.controller.ts`
-4. **Add Validation** using pipes in `src/app/pipes/`
-5. **Document API** using Swagger decorators
+```bash
+# Application Configuration
+NODE_ENV=development
+PORT=3000
+APP_URL=http://localhost:3000
 
-## 🔒 Security & Validation
+```
 
-- **File Type Validation**: Only MP3 files accepted
-- **File Size Limit**: 50MB maximum file size
-- **Input Sanitization**: Proper error handling and validation
-- **CORS Enabled**: Configured for development and production
+### Test the API
 
-## 📚 Dependencies
-
-### Core Dependencies
-- `@nestjs/common`: NestJS core framework
-- `@nestjs/platform-express`: Express platform integration
-- `@nestjs/swagger`: API documentation
-- `@nestjs/config`: Configuration management
-- `multer`: File upload handling
-
-### Development Dependencies
-- `@nestjs/cli`: NestJS command line tools
-- `typescript`: TypeScript compiler
-- `eslint`: Code linting
-- `prettier`: Code formatting
-
-## 🚨 Error Handling
-
-The application handles various error scenarios:
-
-- **No File Uploaded**: Returns 400 with "No file uploaded" message
-- **Invalid File Type**: Returns 400 with "Only MP3 files are allowed" message
-- **File Too Large**: Returns 400 with size limit exceeded message
-- **MP3 Parsing Errors**: Returns 400 with parsing failure details
-- **Server Errors**: Returns 500 with appropriate error messages
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is part of a technical assessment and is not licensed for commercial use.
-
-## 🆘 Support
-
-For technical issues or questions:
-1. Check the Swagger documentation at `/api-docs`
-2. Review the error logs in the console
-3. Verify file format and size requirements
-4. Ensure the server is running on the correct port
+1. **Upload an MP3 file** using the `/file-upload` endpoint
+2. **Get frame count** in the response
+3. **Compare results** with `mediainfo` tool for validation
 
 ---
 
-**Built with ❤️ using NestJS and TypeScript**
+## 🚀 Features
+
+- **Streaming MP3 Analysis**: O(1) memory usage for files of any size
+- **Accurate Frame Counting**: Custom MP3 parser with two-header confirmation
+- **Large File Support**: Handles multi-GB MP3 files efficiently
+- **Real-time Processing**: Analyzes files as they stream in
+- **Comprehensive Validation**: File type, size, and content validation
+- **Swagger Documentation**: Interactive API documentation
+- **Structured Logging**: Bunyan-based logging with detailed MP3 processing insights
+
+## 🏗️ Architecture
+
+### Core Components
+
+- **`Mp3AnalysisService`**: Streaming MP3 frame counter with sliding buffer
+- **`FileValidationPipe`**: Comprehensive file validation (type, size, content)
+- **`AppController`**: REST API endpoint for file uploads
+- **`BunyanLogger`**: Structured logging service
+
+### MP3 Parsing Algorithm
+
+- **Sliding Buffer**: 4KB rolling buffer for cross-chunk frame detection
+- **Two-Header Confirmation**: Validates frames by checking subsequent headers
+- **ID3v2 Support**: Handles ID3v2 tags with footer support
+- **MPEG-1 Layer III**: Supports standard MP3 format
+- **Duplicate Prevention**: Global position tracking prevents double-counting
+
+## 📡 API Endpoints
+
+### POST /file-upload
+
+Upload and analyze an MP3 file to count frames.
+
+**Request:**
+- **Content-Type**: `multipart/form-data`
+- **Body**: `file` (MP3 file)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "frameCount": 1500
+  },
+  "code": 200
+}
+```
+
+**Error Responses:**
+- `400`: No file uploaded, invalid file type, or file too large
+- `413`: File size exceeds limit
+- `500`: Internal server error during processing
+
+## 🔍 MP3 Frame Counting Algorithm
+
+### Streaming Approach
+
+1. **Chunk Processing**: Files are processed in chunks as they stream in
+2. **Sliding Buffer**: Maintains 4KB buffer for cross-chunk boundary detection
+3. **Frame Detection**: Scans for MPEG sync words (0xFF + 0xE0 pattern)
+4. **Header Validation**: Parses MPEG version, layer, bitrate, and sample rate
+5. **Two-Header Confirmation**: Validates current frame by checking next frame
+6. **Duplicate Prevention**: Global position tracking ensures accurate counting
+
+### Frame Header Structure
+
+```
+Byte 1: 11111111 (0xFF - Sync word)
+Byte 2: 111xxxxx (0xE0 + version + layer + protection)
+Byte 3: xxxx xxxx (bitrate + sample rate + padding + protection)
+```
+
+### Supported Formats
+
+- **MPEG Version**: MPEG-1 only
+- **Layer**: Layer III only
+- **Bitrates**: 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 288, 320 kbps
+- **Sample Rates**: 44.1kHz, 48kHz, 32kHz
+
+### Manual Testing
+
+1. **Start the application**: `npm run start:dev`
+2. **Open Swagger UI**: `http://localhost:3000/api-docs`
+3. **Upload MP3 file**: Use the `/file-upload` endpoint
+4. **Verify frame count**: Compare with `mediainfo` tool
+
+## 📊 Performance Characteristics
+
+### Memory Usage
+- **Constant Memory**: O(1) - 4KB sliding buffer regardless of file size
+- **Scalability**: Handles files of arbitrary size
+- **Efficiency**: No file buffering in memory
+
+### Processing Speed
+- **Real-time**: Processes data as it arrives
+- **Optimized**: Minimal CPU overhead for frame detection
+- **Streaming**: Limited only by stream read rate
+
+### File Size Limits
+- **Default**: 5GB (configurable)
+- **Validation**: Both Multer and custom pipe validation
+
+## 🔧 Configuration
+
+### File Validation Settings
+
+```typescript
+// In FileValidationPipe
+const maxSize = 5 * 1024 * 1024 * 1024; // 5GB
+const FRAME_SIZE_MIN = 20;               // Minimum frame size
+const FRAME_SIZE_MAX = 10000;            // Maximum frame size
+```
+
+### Streaming Configuration
+
+```typescript
+// In Mp3AnalysisService
+const SLIDING_BUFFER_SIZE = 4 * 1024;   // 4KB sliding buffer
+const STREAM_CHUNK_SIZE = 8192;         // 8KB chunk processing
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **"No file uploaded" Error**
+   - Ensure file field name is `file`
+   - Check file size doesn't exceed limit
+
+2. **"Only MP3 files are allowed" Error**
+   - Verify file is valid MP3 format
+   - Check file has proper MPEG headers
+
+3. **Memory Issues with Large Files**
+   - Ensure streaming mode is enabled
+   - Check sliding buffer size configuration
+
+4. **Incorrect Frame Counts**
+   - Verify MP3 format compatibility
+   - Check for corrupted file headers
+
+### Debug Logging
+
+Enable debug logging to see detailed processing information:
+
+```bash
+LOG_LEVEL=debug npm run start:dev
+```
+
+## 🔮 Future Enhancements
+
+- **Parallel Processing**: Worker threads for faster analysis
+- **Advanced Validation**: CRC checking and frame integrity verification
+- **Metadata Extraction**: ID3 tag parsing and audio quality metrics
+- **Batch Processing**: Multiple file upload and analysis
+- **Performance Metrics**: Processing time and throughput monitoring
+
+## 📚 Technical Details
+
+### Dependencies
+
+- **NestJS**: Framework for building scalable server-side applications
+- **Multer**: Middleware for handling multipart/form-data
+- **Bunyan**: Structured logging library
+- **Swagger**: API documentation and testing
+
+### File Processing Flow
+
+```
+File Upload → Multer → FileValidationPipe → Stream Creation → MP3 Analysis → Frame Count
+     ↓              ↓           ↓              ↓              ↓           ↓
+  Raw File    File Buffer   Validated    Readable Stream   Sliding     Response
+                                    File              Buffer
+```
+
+### Error Handling
+
+- **Validation Errors**: Caught by validation pipe
+- **Processing Errors**: Caught by stream error handlers
+- **System Errors**: Caught by global exception filters
+- **User Feedback**: Clear error messages with HTTP status codes

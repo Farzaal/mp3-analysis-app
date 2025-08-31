@@ -37,8 +37,9 @@ export class AppController extends BaseController {
   @Post("/file-upload")
   @UseInterceptors(
     FileInterceptor("file", {
-      // Optional: enforce large file limit consistent with your pipe (e.g., 3GB)
-      limits: { fileSize: 3 * 1024 * 1024 * 1024 },
+      limits: {
+        fileSize: 5 * 1024 * 1024 * 1024,
+      },
     }),
   )
   @UsePipes(new FileValidationPipe())
