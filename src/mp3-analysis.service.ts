@@ -1,18 +1,18 @@
 import { Injectable } from "@nestjs/common";
 import { Readable } from "stream";
-import { BunyanLogger } from "./commons/logger.service";
-import { Mp3FrameHeader } from "./contracts/interfaces/mp3FrameHeader.interface";
-import { Id3v2Tag } from "./contracts/interfaces/id3v2Tag.interface";
-import { StreamProcessingState } from "./contracts/interfaces/streamProcessingState.interface";
-import { Mp3Version } from "./contracts/enums/mpegVersion.enum";
-import { Mp3Layer } from "./contracts/enums/mpegLayer.enum";
+import { BunyanLogger } from "./app/commons/logger.service";
+import { Mp3FrameHeader } from "./app/contracts/interfaces/mp3FrameHeader.interface";
+import { Id3v2Tag } from "./app/contracts/interfaces/id3v2Tag.interface";
+import { StreamProcessingState } from "./app/contracts/interfaces/streamProcessingState.interface";
+import { Mp3Version } from "./app/contracts/enums/mpegVersion.enum";
+import { Mp3Layer } from "./app/contracts/enums/mpegLayer.enum";
 import {
   MPEG1_LAYER3_BITRATES,
   MPEG1_SAMPLE_RATES,
   FRAME_SIZE_MIN,
   FRAME_SIZE_MAX,
   SLIDING_BUFFER_SIZE,
-} from "./constants/mp3.constants";
+} from "./app/constants/mp3.constants";
 
 @Injectable()
 export class Mp3AnalysisService {

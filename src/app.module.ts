@@ -3,7 +3,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import { BunyanLogger } from "./app/commons/logger.service";
-import { Mp3AnalysisService } from "./app/mp3-analysis.service";
+import { Mp3AnalysisService } from "./mp3-analysis.service";
 import { FileValidationPipe } from "./app/pipes/file-validation.pipe";
 
 @Module({

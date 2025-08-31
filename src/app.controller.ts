@@ -12,7 +12,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiConsumes } from "@nestjs/swagger";
 import { BaseController } from "./app/commons/base.controller";
 import { Response } from "express";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { Mp3AnalysisService } from "./app/mp3-analysis.service";
+import { Mp3AnalysisService } from "./mp3-analysis.service";
 import { FileUploadDto } from "./app/dto/file-upload.dto";
 import { FileValidationPipe } from "./app/pipes/file-validation.pipe";
 import { FILE_UPLOAD_API_DOCS } from "./app/constants/api-docs.constants";
